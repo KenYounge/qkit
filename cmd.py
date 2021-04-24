@@ -1,13 +1,13 @@
-""" Execute commands in BASH. """
+""" Execute BASH commands from Python. """
 
 import time
 import subprocess
 
 PROCESSES = []
-MAX_BASH_COMMANDS = 100
+MAX_COMMANDS = 100
 
 def popen(cmd):
-    while len(PROCESSES) >= MAX_BASH_COMMANDS:
+    while len(PROCESSES) >= MAX_COMMANDS:
         print('Waiting for a free process...')
         for i in sorted(range(len(PROCESSES)), reverse=True):
             if PROCESSES[i].poll() is not None:

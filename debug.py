@@ -1,4 +1,4 @@
-""" Debug utilities to view data structures, memory, etc.  """
+""" Debug custom data structures, object sizes, and memory issues. """
 
 import os
 import sys
@@ -8,7 +8,7 @@ from   random      import shuffle as random_shuffle
 from   numbers     import Number
 from   collections import Set, Mapping, deque
 
-def debug_dct(dct, fname='', n_rows=100):
+def view_dct(dct, fname='', n_rows=100):
     fname = str(fname.strip())
     if not fname.endswith('.csv'): fname += '.csv'
     if n_rows > len(dct): n_rows = len(dct)
@@ -28,7 +28,7 @@ def debug_dct(dct, fname='', n_rows=100):
         for key in keys[:n_rows]:
             print((key, dct[key]))
 
-def debug_lst(lst, fname='', n_rows=100):
+def view_lst(lst, fname='', n_rows=100):
     if n_rows > len(lst): n_rows = len(lst)
     fname = str(fname.strip())
     if not fname.endswith('.csv'): fname += '.csv'
@@ -49,14 +49,14 @@ def debug_lst(lst, fname='', n_rows=100):
             item = str(lst[i])
             print(item)
 
-def debug_set(s, fname='', n_rows=100):
+def view_set(s, fname='', n_rows=100):
     lst = list(s)
-    debug_lst(lst, fname=fname, n_rows=n_rows)
+    view_lst(lst, fname=fname, n_rows=n_rows)
 
-def debug_memory():
+def view_memory():
     print(psutil.virtual_memory())
 
-def debug_size(obj_0):
+def view_size(obj_0):
     """ Recursively iterate to sum size of object & members. Source: https://stackoverflow.com/questions/449560/ """
     zero_depth_bases = (str, bytes, Number, range, bytearray)
     iteritems = 'items'
@@ -80,3 +80,22 @@ def debug_size(obj_0):
             size += sum(inner(getattr(obj, s)) for s in obj.__slots__ if hasattr(obj, s))
         return size
     return inner(obj_0)
+
+def view_head(x, name='', num_rows=5):
+    """Print the top header of rows of an object"""
+    if type(x) is dict:
+        print(name, dict(list(x.items())[0:num_rows]))
+    elif type(x) is set:
+        print(name, set([item for item in list(x)[0:num_rows]]))
+    else:
+        print(name, x[0:num_rows])
+
+def view_docstring(docstring, program):
+    print()
+    print(str(program).upper())
+    print()
+    print(docstring)
+    print()
+    print('-' * 40)
+    print()
+

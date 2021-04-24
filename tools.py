@@ -1,36 +1,66 @@
-""" Support Utilities """
+""" Utilities """
 
+import sys
 import subprocess
 import time
 import datetime
-from sys          import argv
+
+from   sys        import argv
 from   os         import uname
 from   socket     import gethostname
 from   random     import randint as random_randint
 from   datetime   import datetime
 
-DEBUG  = 'debug' in [str(flag).lower() for flag in argv]
-CLOUD  =  bool(str(uname()[0]) == 'Linux')  # Linux implies cloud
+def in_debug():
+    return 'debug' in [str(flag).lower() for flag in argv]
 
-def is_cloud():
-    return CLOUD
+def in_cloud():
+    return bool(str(uname()[0]) == 'Linux')  # Linux implies cloud
+
+def in_jupyter():
+    try:
+        return 'ipykernel' in sys.modules
+    except:
+        return False
 
 def is_number(s):
     try:    float(s)
     except: return False
     else:   return True
 
-def hostname():
+def host_name():
     return gethostname()
 
 def git_version():
     return str(subprocess.check_output('git rev-parse --short HEAD', shell=True)).strip()
 
-def timestamp():
-    return 'Current time ' + str(time.strftime("%m/%d %H:%M", time.localtime(time.time())))
-
-def datestamp():
+def date_stamp():
     return str(datetime.date.today())
+
+def time_stamp():
+    return str(time.strftime("%m/%d %H:%M", time.localtime(time.time())))
+
+def time_stamp_id():
+    ts = str(str(datetime.now())[:-10]).replace(' ','-').replace(':','-')
+    ts = ts[:10] + '_' + ts[11:] + '_' + make_an_id()
+    return ts
+
+def make_an_id():
+    return str(hex(int((time.time()*10000000)/float(random_randint(1,10000000))))[2:])
+
+def format_value(val, digits=2, min_val=None, supress_zero=False):
+    if val is None: return ''
+    if val == '': return ''
+    if min_val is not None and val <= min_val:
+        return '.'
+    if digits is None: digits = 2
+    mask = "%0." + str(digits) + "f"
+    if supress_zero and abs(val) < (1 / (10 ** digits) ):
+        return ' '
+    elif val >= 0:
+        return ' ' + str(mask % val)
+    else:
+        return str(mask % val)
 
 def validate_date(date_string):
     try:
@@ -71,26 +101,18 @@ def parse_iso8601tz(date_string):
         dt = dt - delta
     return dt
 
-def time_stamp_now_uuid():
-    ts = str(str(datetime.now())[:-10]).replace(' ','-').replace(':','-')
-    ts = ts[:10] + '_' + ts[11:] + '_' + quasi_uniq_id()
-    return ts
+def split_list(lst, num_lists_returned):
+    original_length = len(lst)
+    return [lst[i * original_length // num_lists_returned: (i + 1) * original_length // num_lists_returned]
+            for i in range(num_lists_returned)]
 
-def quasi_uniq_id():
-    return str(hex(int((time.time()*10000000)/float(random_randint(1,10000000))))[2:])
-
-def split_list(alist, num_lists):
-    original_length = len(alist)
-    return [alist[i * original_length // num_lists: (i + 1) * original_length // num_lists]
-            for i in range(num_lists)]
-
-def batch(iterable, batch_size=1):
+def batch_iterable(iterable, batch_size=1):
     """Break an iterable into batches."""
     l = len(iterable)
     for ndx in range(0, l, batch_size):
         yield iterable[ndx:min(ndx+batch_size, l)]
 
-def break_points(lst, batch_no, num_batches):
+def batch_break_points(lst, batch_no, num_batches):
     assert batch_no < num_batches
     assert num_batches < len(lst)
     batch_size = int(len(lst)/num_batches) + 1

@@ -6,7 +6,7 @@ import time
 import random
 
 
-MYSQL_DB_CALC          = 'mydb'               # Name of the MySQL database
+MYSQL_DB               = 'mydb'               # Name of the MySQL database
 MYSQL_IP               = '###.###.###.###'    # Static IP Assigned in DEV panel
 MYSQL_PORT             = 3306
 MYSQL_USR              = 'USERNAME'
@@ -26,9 +26,9 @@ def sql_cnn():
             time.sleep((2 ** retries) + (random.randint(0, 1000) / 1000))
         try:
             if os.getenv('SERVER_SOFTWARE') and os.getenv('SERVER_SOFTWARE').startswith('Google App Engine/'):
-                db = pymysql.connect(unix_socket='/cloudsql/' + MYSQL_INSTANCE_NAME, db=MYSQL_DB_CALC, user=MYSQL_USR, passwd=MYSQL_PWD, charset='utf8')
+                db = pymysql.connect(unix_socket='/cloudsql/' + MYSQL_INSTANCE_NAME, db=MYSQL_DB, user=MYSQL_USR, passwd=MYSQL_PWD, charset='utf8')
             else:
-                db = pymysql.connect(host=MYSQL_IP, port=MYSQL_PORT, db=MYSQL_DB_CALC, user=MYSQL_USR, passwd=MYSQL_PWD, charset='utf8')
+                db = pymysql.connect(host=MYSQL_IP, port=MYSQL_PORT, db=MYSQL_DB, user=MYSQL_USR, passwd=MYSQL_PWD, charset='utf8')
 
             return db
         except (KeyboardInterrupt, SystemExit):

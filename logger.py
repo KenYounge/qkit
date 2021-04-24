@@ -1,5 +1,4 @@
-""" Log stdout to a file named 'LOG'+timestamp (or machine name if run in the cloud). Starts automatically upon import
-"""
+""" Log all stdout to LOGGER+TIMESTAMP.txt (or the machine name in the cloud). Starts automatically upon import. """
 
 import sys
 
@@ -48,7 +47,7 @@ class _Logger(object):
         self.terminal.write(msg)
 
         # Strip off colors (if they were set)
-        msg = ui.de_colorize(msg)
+        msg = ui.plaintext(msg)
         self.logfile.write(msg)
         self.logfile.flush()
 
@@ -64,7 +63,7 @@ def update_status(s):
         f.write(s)
 
 
-# START LOGGER ON IMPORT -----------------------------------------------------------------------------------
+# AUTOMATICALLY START THE LOGGER RUNNING UPON IMPORT -------------------------------------------------------------------
 
 sys.stdout = _Logger()
 commanline = ' '.join(sys.argv).split('/')[-1]

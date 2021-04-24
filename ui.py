@@ -1,42 +1,38 @@
-""" Utilities for a Python console """
+""" User Interface for a Python console. """
 
 import os
 import sys
 import json
 import traceback
+from subprocess   import check_output
+from   datetime   import datetime
 
 
-# GLOBALS --------------------------------------------------------------------
-
-DEBUG                  = 'debug' in [str(flag).lower() for flag in sys.argv]
-CLOUD                  =  bool(str(os.uname()[0]) == 'Linux')  # Linux implies cloud
-
-
-# CONSTANTS --------------------------------------------------------------------
-
-WIDTH_PROGBAR          = 50
-WIDTH_CONSOLE          = 80
-WIDTH_LOGFILE          = 120
-WIDTH_MENU_BAR         = 40
-
+# GLOBALS & CONSTANTS --------------------------------------------------------------------------------------------------
 INDENT                 = "        "
-INDENT_ERR_DETAIL      = '              '
 
-# COLORS
+try:
+    WIDTH_CONSOLE      = int(check_output(['stty', 'size']).split()[1])
+except:
+    WIDTH_CONSOLE      = 80
+WIDTH_PROGBAR          = WIDTH_CONSOLE/2
+WIDTH_LOGFILE          = 120
+WIDTH_MENU             = WIDTH_CONSOLE/2
 
-TXT_NORMAL             = '\033[0m'
-TXT_BOLD               = '\033[1m'
-TXT_FAINT              = '\033[2m'
-TXT_ITALIC             = '\033[3m'
-TXT_UNDERLINE          = '\033[4m'
-TXT_BLACK              = '\033[90m'
-TXT_RED                = '\033[91m'
-TXT_GREEN              = '\033[92m'
-TXT_YELLOW             = '\033[93m'
-TXT_BLUE               = '\033[94m'
-TXT_MAGENTA            = '\033[95m'
-TXT_CYAN               = '\033[96m'
-TXT_WHITE              = '\033[97m'
+NORMAL                 = '\033[0m'
+BOLD                   = '\033[1m'
+FADE                   = '\033[2m'
+ITALIC                 = '\033[3m'
+UNDERLINE              = '\033[4m'
+
+COLOR_BLACK            = '\033[90m'
+COLOR_RED              = '\033[91m'
+COLOR_GREEN            = '\033[92m'
+COLOR_YELLOW           = '\033[93m'
+COLOR_BLUE             = '\033[94m'
+COLOR_MAGENTA          = '\033[95m'
+COLOR_CYAN             = '\033[96m'
+COLOR_WHITE            = '\033[97m'
 
 HI_WHITE               = '\033[1m\033[9%sm\033[4%sm' % (0, 7)
 HI_BLACK               = '\033[1m\033[9%sm\033[4%sm' % (7, 0)
@@ -47,81 +43,38 @@ HI_BLUE                = '\033[1m\033[9%sm\033[4%sm' % (7, 4)
 HI_MAGENTA             = '\033[1m\033[9%sm\033[4%sm' % (7, 5)
 HI_CYAN                = '\033[1m\033[9%sm\033[4%sm' % (7, 6)
 
-def turn_colors_off():
+# Remove coloring when we are in the cloud - makes log files hard to read
+if bool(str(os.uname()[0]) == 'Linux'):
 
-    global TXT_NORMAL
-    global TXT_BOLD
-    global TXT_FAINT
-    global TXT_ITALIC
-    global TXT_UNDERLINE
-    global TXT_BLACK
-    global TXT_RED
-    global TXT_GREEN
-    global TXT_YELLOW
-    global TXT_BLUE
-    global TXT_MAGENTA
-    global TXT_CYAN
-    global TXT_WHITE
-    global HI_WHITE
-    global HI_BLACK
-    global HI_RED
-    global HI_GREEN
-    global HI_YELLOW
-    global HI_BLUE
-    global HI_MAGENTA
-    global HI_CYAN
-
-    TXT_NORMAL             = ''
-    TXT_BOLD               = ''
-    TXT_FAINT              = ''
-    TXT_ITALIC             = ''
-    TXT_UNDERLINE          = ''
-    TXT_BLACK              = ''
-    TXT_RED                = ''
-    TXT_GREEN              = ''
-    TXT_YELLOW             = ''
-    TXT_BLUE               = ''
-    TXT_MAGENTA            = ''
-    TXT_CYAN               = ''
-    TXT_WHITE              = ''
-    HI_WHITE               = ''
-    HI_BLACK               = ''
-    HI_RED                 = ''
-    HI_GREEN               = ''
-    HI_YELLOW              = ''
-    HI_BLUE                = ''
-    HI_MAGENTA             = ''
-    HI_CYAN                = ''
-
-# COLORS -----------------------------------------------------------------------
-
-def black(s):        return TXT_BLACK   + s + TXT_NORMAL
-def red(s):          return TXT_RED     + s + TXT_NORMAL
-def green(s):        return TXT_GREEN   + s + TXT_NORMAL
-def yellow(s):       return TXT_YELLOW  + s + TXT_NORMAL
-def blue(s):         return TXT_BLUE    + s + TXT_NORMAL
-def magenta(s):      return TXT_MAGENTA + s + TXT_NORMAL
-def cyan(s):         return TXT_CYAN    + s + TXT_NORMAL
-def white(s):        return TXT_WHITE   + s + TXT_NORMAL
-
-def black_highlight(s):    return HI_BLACK    + s + TXT_NORMAL
-def red_highlight(s):      return HI_RED      + s + TXT_NORMAL
-def green_highlight(s):    return HI_GREEN    + s + TXT_NORMAL
-def yellow_highlight(s):   return HI_YELLOW   + s + TXT_NORMAL
-def blue_highlight(s):     return HI_BLUE     + s + TXT_NORMAL
-def magenta_highlight(s):  return HI_MAGENTA  + s + TXT_NORMAL
-def cyan_highlight(s):     return HI_CYAN     + s + TXT_NORMAL
-def white_highlight(s):    return HI_WHITE    + s + TXT_NORMAL
-
-def underline(s):  return TXT_UNDERLINE + s + TXT_NORMAL
+    NORMAL             = ''
+    BOLD               = ''
+    FADE               = ''
+    ITALIC             = ''
+    UNDERLINE          = ''
+    COLOR_BLACK        = ''
+    COLOR_RED          = ''
+    COLOR_GREEN        = ''
+    COLOR_YELLOW       = ''
+    COLOR_BLUE         = ''
+    COLOR_MAGENTA      = ''
+    COLOR_CYAN         = ''
+    COLOR_WHITE        = ''
+    HI_WHITE           = ''
+    HI_BLACK           = ''
+    HI_RED             = ''
+    HI_GREEN           = ''
+    HI_YELLOW          = ''
+    HI_BLUE            = ''
+    HI_MAGENTA         = ''
+    HI_CYAN            = ''
 
 
-# METHODS ------------------------------------------------------------------------
+# FORMATTING -----------------------------------------------------------------------------------------------------------
 
 def colorize(txt, colors):
-    """ Apply color format codes to text.
-        :param    txt:       string to be formatted
-        :param    colors:    function, or list of functions, that add color
+    """ Apply color to text.
+        :param    txt:       text string to be formatted
+        :param    colors:    a function, or list of functions, that add color
 
         :return:  formatted text
     """
@@ -131,55 +84,87 @@ def colorize(txt, colors):
         if type(colors) is tuple or type(colors) is list:
             for color in colors:
                 if color:
-                    s = color(s)
-                s = str(s).replace(TXT_NORMAL + TXT_NORMAL, TXT_NORMAL)
+                    s = colorize(s, color)
+                s = str(s).replace(NORMAL + NORMAL, NORMAL)
+        elif type(colors) is str:
+            s = colors + s + NORMAL
         else:
             s = colors(s)
+    s = str(s).replace(NORMAL + NORMAL, NORMAL)
     return s
 
-def de_colorize(s):
-    s = str(s).replace(TXT_BOLD, '')
-    s = str(s).replace(TXT_FAINT, '')
-    s = str(s).replace(TXT_ITALIC, '')
-    s = str(s).replace(TXT_UNDERLINE, '')
-    s = str(s).replace(TXT_BLACK, '')
-    s = str(s).replace(TXT_RED, '')
-    s = str(s).replace(TXT_GREEN, '')
-    s = str(s).replace(TXT_YELLOW, '')
-    s = str(s).replace(TXT_BLUE, '')
-    s = str(s).replace(TXT_MAGENTA, '')
-    s = str(s).replace(TXT_CYAN, '')
-    s = str(s).replace(TXT_WHITE, '')
-    s = str(s).replace(HI_WHITE, '')
-    s = str(s).replace(HI_BLACK, '')
-    s = str(s).replace(HI_RED, '')
-    s = str(s).replace(HI_GREEN, '')
-    s = str(s).replace(HI_YELLOW, '')
-    s = str(s).replace(HI_BLUE, '')
-    s = str(s).replace(HI_MAGENTA, '')
-    s = str(s).replace(HI_CYAN, '')
-    s = str(s).replace(TXT_NORMAL, '')
-    s = str(s).replace('[40m', '')
-    s = str(s).replace('[41m', '')
-    s = str(s).replace('[42m', '')
-    s = str(s).replace('[43m', '')
-    s = str(s).replace('[44m', '')
-    s = str(s).replace('[45m', '')
-    s = str(s).replace('[46m', '')
-    s = str(s).replace('[47m', '')
+def plaintext(s):
+
+
+    for FRMT in [ NORMAL, BOLD, FADE, ITALIC, UNDERLINE, COLOR_BLACK, COLOR_RED, COLOR_GREEN,
+                  COLOR_YELLOW, COLOR_BLUE, COLOR_MAGENTA, COLOR_CYAN, COLOR_WHITE, HI_WHITE, HI_BLACK, HI_RED, HI_GREEN,
+                  HI_YELLOW, HI_BLUE, HI_MAGENTA, HI_CYAN,
+                  '[40m','[41m','[42m','[43m','[44m','[45m','[46m','[47m' ]:
+        try:
+            s = str(s).replace(FRMT, '')
+        except: pass
     return s
 
-def clear_terminal():
-    os.system('clear')
 
-def divider(char='-'):
-    print(char * WIDTH_CONSOLE)
+def underline(s):
+    return UNDERLINE + s + NORMAL
 
-def banner(msg=' ', colors=(white, blue_highlight)):
-    print(colorize(msg.ljust(WIDTH_CONSOLE), colors))
+def italic(s):
+    return ITALIC + s + NORMAL
+
+def fade(s):
+    return FADE + s + NORMAL
+
+def color_black(s):
+    return COLOR_BLACK + s + NORMAL
+
+def color_red(s):
+    return COLOR_RED + s + NORMAL
+
+def color_green(s):
+    return COLOR_GREEN + s + NORMAL
+
+def color_yellow(s):
+    return COLOR_YELLOW + s + NORMAL
+
+def color_blue(s):
+    return COLOR_BLUE + s + NORMAL
+
+def color_magenta(s):
+    return COLOR_MAGENTA + s + NORMAL
+
+def color_cyan(s):
+    return COLOR_CYAN + s + NORMAL
+
+def color_white(s):
+    return COLOR_WHITE + s + NORMAL
+
+def hi_black(s):
+    return HI_BLACK + s + NORMAL
+
+def hi_red(s):
+    return HI_RED + s + NORMAL
+
+def hi_green(s):
+    return HI_GREEN + s + NORMAL
+
+def hi_yellow(s):
+    return HI_YELLOW + s + NORMAL
+
+def hi_blue(s):
+    return HI_BLUE + s + NORMAL
+
+def hi_magenta(s):
+    return HI_MAGENTA + s + NORMAL
+
+def hi_cyan(s):
+    return HI_CYAN + s + NORMAL
+
+def hi_white(s):
+    return HI_WHITE + s + NORMAL
 
 
-# MENU ------------------------------------------------------------------------
+# MENUS ----------------------------------------------------------------------------------------------------------------
 
 def menu(options, title=None, default=None, shortcuts=False, simplelist=True):
 
@@ -201,7 +186,7 @@ def menu(options, title=None, default=None, shortcuts=False, simplelist=True):
             title = str(title).strip()
             title = title + ': ' if not title.endswith(':') else title + ' '
         title = title[:-2] + ' [' + str(default) + ']: ' if default else title
-        title = TXT_UNDERLINE + title + TXT_NORMAL
+        title = UNDERLINE + title + NORMAL
 
         # Convert simple list to a list of tuples if the simplelist flag is set.
         options = [ (optno + 1, options[optno])
@@ -234,7 +219,7 @@ def menu(options, title=None, default=None, shortcuts=False, simplelist=True):
 
         # get choice
         try:
-            choice = input(' Select:  ' + TXT_NORMAL)
+            choice = input(' Select:  ' + NORMAL)
         except (KeyboardInterrupt, SystemExit):
             print()
             raise
@@ -250,7 +235,7 @@ def menu(options, title=None, default=None, shortcuts=False, simplelist=True):
         if choice == '' and default:
             sys.stdout.write('\033[1A')  # go up a line
             sys.stdout.flush()
-            print(TXT_NORMAL + '\r Select:  ' + str(default) + TXT_NORMAL)
+            print(NORMAL + '\r Select:  ' + str(default) + NORMAL)
             print()
             return default
 
@@ -343,7 +328,7 @@ def confirm(prompt='OK to continue? ', default=True):
     except: return default
 
 
-# PROGBAR ----------------------------------------------------------------------
+# PROGBAR --------------------------------------------------------------------------------------------------------------
 
 def progbar(x, msg='', width=50):
     """ Display progbar where x is ratio completed (e.g.,  x=.477 becomes 48%) """
@@ -363,9 +348,31 @@ def progbar(x, msg='', width=50):
         print(e)
 
 
-# PRINT MESSAGES ---------------------------------------------------------------
+# CONSOLE MESSAGING ----------------------------------------------------------------------------------------------------
 
-def info(msg, prefix='', warning=False, err=False, ljust=False, fcolor=TXT_BLUE, bcolor='', lf=True, tracebk=False):
+def banner(txt=' ', colors=(color_white, hi_blue), width=None, stamp_time=True):
+    """Print message as a banner"""
+    if not width: width = console_width()
+    if stamp_time: txt +=  str(str(datetime.now())[:-10]).rjust(width - len(txt))
+    if not colors or bool(str(os.uname()[0]) == 'Linux'):
+        divider(width=width)
+        print(txt)
+        divider(width=width)
+    else:
+        print(colorize(txt.ljust(console_width()), colors))
+
+def section(txt, capitalize=True):
+    """Print message as a sub-HEADER"""
+    if capitalize: txt = str(txt).upper()
+    print()
+    print(' >', txt)
+    print()
+
+def divider(char='-', width=None):
+    if not width: width = console_width()
+    print(char * width)
+
+def message(msg, prefix='', warning=False, err=False, ljust=False, fcolor=COLOR_BLUE, bcolor='', lf=True, tracebk=False):
 
     # Handle Tracebacks
     if tracebk is True:
@@ -397,13 +404,13 @@ def info(msg, prefix='', warning=False, err=False, ljust=False, fcolor=TXT_BLUE,
     if warning:
         msg = str(msg).replace('\n', ';  ') # flatten to one line
 
-    # Log the msg
+    # Print out the msg
     try:
 
         # Errors
         if err:
             print()
-            print(HI_RED + str('ERROR: ' + msg).ljust(WIDTH_CONSOLE) + TXT_NORMAL)
+            print(HI_RED + str('ERROR: ' + msg).ljust(WIDTH_CONSOLE) + NORMAL)
             if tracebk:
                 lines = str(tracebk).strip().split('\n')
                 out   = []
@@ -420,7 +427,7 @@ def info(msg, prefix='', warning=False, err=False, ljust=False, fcolor=TXT_BLUE,
                                 else:   out.append(line)
                         if out:
                             for line in out:
-                                print(TXT_RED + line + TXT_NORMAL)
+                                print(COLOR_RED + line + NORMAL)
                     except Exception as e: print('TRACEBACK ERROR:', str(e))
             print()
 
@@ -428,16 +435,16 @@ def info(msg, prefix='', warning=False, err=False, ljust=False, fcolor=TXT_BLUE,
         else:
 
             if bcolor: msg = str(bcolor) + msg.ljust(WIDTH_CONSOLE)
-            if warning:   msg = TXT_RED + TXT_BOLD + msg
+            if warning:   msg = COLOR_RED + BOLD + msg
 
-            msg = '    ' + TXT_WHITE + msg
+            msg = '    ' + COLOR_WHITE + msg
 
             if ljust:  msg = str(msg).ljust(WIDTH_CONSOLE - 24)
 
             if lf:
-                print(fcolor  + msg + TXT_NORMAL)
+                print(fcolor + msg + NORMAL)
             else:
-                print(fcolor  + msg + TXT_NORMAL, end='', flush=True)
+                print(fcolor + msg + NORMAL, end='', flush=True)
 
     except Exception as e:
         try:
@@ -446,14 +453,35 @@ def info(msg, prefix='', warning=False, err=False, ljust=False, fcolor=TXT_BLUE,
             traceback.print_exc()
         except: pass
 
-def warn(msg):
-    info(msg, warning=True)
+def count(num, description='', col_width=20):
+    """Print an aligned numerical count and a description"""
+    if num is None:
+        num = ''
+    elif str(num).isnumeric():
+        num = "{:,}".format(num).rjust(col_width)
+    else:
+        num = str(num).rjust(col_width)
+    print(num + '  ' + str(description).rstrip())
 
-def error(e=None, tracebk=True):
+def warn(msg):
+    msg(msg, warning=True)
+
+def alert(e=None, tracebk=True):
     if not e:
         tracebk = True
-    info(e, err=True, tracebk=tracebk)
+    message(e, err=True, tracebk=tracebk)
 
-def debug(msg):
-    if DEBUG:
-        info(msg, prefix='>>>>>>> ' )
+def debug(msg, verbose=False):
+
+    # Only print out debugging lineitems when program was called
+    if verbose or 'debug' in [str(flag).lower() for flag in sys.argv]:
+        msg(msg, prefix='>>>>>>> ')
+
+def clear():
+    os.system('clear')
+
+def console_width():
+    try:
+        return int(check_output(['stty', 'size']).split()[1])
+    except:
+        return 80

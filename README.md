@@ -1,10 +1,11 @@
 # The `qkit` Toolkit
 
-Copyright (c) 2021 by Quant AI, LLC and Kenneth A. Younge.  
+Copyright (c) 2021 by Quant AI, LLC.  
 
-This repository provides Python 3 tools and utilities used in my research.  
+This repository provides supporting Python code and utilities used in our research.  
 
-SOURCE: https://github.com/KenYounge/qkit/
+AUTHOR:  Kenneth A. Younge
+SOURCE:  https://github.com/KenYounge/qkit/
 LIECNSE: Access to this code is provided under an MIT License.
 
 
@@ -30,12 +31,12 @@ LIECNSE: Access to this code is provided under an MIT License.
         from qkit import fio
 
 
-### Other Resources
+### Resources
 
-  * See [RECIPES.md](RECIPES.md) for instructions for common tasks.
+  * [Recipes.md](RECIPES.md) for instructions for common tasks.
 
-  * See [REQUIREMENTS.txt](REQUIREMENTS.txt) for the pip packages used by toolkit. 
+  * [Rrequirements.txt](REQUIREMENTS.txt) for the pip packages used by toolkit. 
 
-  * See [setup_osx.md](setup_osx.md) for reinstall instructions for a Mac OSX Big Sur M1 computer.
+  * [setup_osx.md](setup_osx.md) for instructions to configure a new Macbook OSX Big Sur M1.
 
-  * See [setup_unix.sh](setup_unix.sh) for an executable bash script to preconfigure a Ubuntu machine for common tasks.
+  * [setup_unix.sh](setup_unix.sh) for a bash script to configure LINUX for common tasks.
