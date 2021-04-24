@@ -3,17 +3,34 @@
 
 ## Google Compute
 
+#### Select a VM image
+
+  - An all-around image for machine learning:
+
+        common-cpu
+
+  - Tensorflow Images:
+    
+        tf2-latest-gpu
+        tf2-latest-cpu
+        tf-latest-gpu
+        tf-latest-cpu
+    
+  - XGBoot images:
+    
+        xgboost-latest-gpu-experimental
+        xgboost-latest-cpu-experimental
+
 #### Create a VM
 
   - Instructions assume that the VM should be named `vm`
 
-  - Use Google Dev Console to setup a new VM as follows:
+  - When using Google Dev Console, setup a new VM as follows:
 
         name:           vm
         zone:           europe-west1-d
         machine type:   n1-highcpu-8
-        boot disk:      tis-boot-disk
-                        or start fresh with OS image = debian (NOT backports)
+        boot disk:      OS image = Debian GNU/Linux 10
         boot type:      SSD
         boot size:      500 GB
         svc acct:       enable default service account
@@ -21,18 +38,18 @@
         restart:        disable auto restart
         maintenance:    migrate
 
-  - Command-line for the above for VM "tis-vm"  (PASTE SPECIAL without newlines)
+  - Command-line for the above for a new VM called "vm"  (PASTE SPECIAL without newlines)
 
         gcloud compute instances create "vm"
             --boot-disk-device-name "vm"
-            --project "epfl-cdm-tis"
+            --project NAME-OF-PROJECT
             --zone "europe-west1-d"
             --machine-type "n1-highcpu-16"
             --subnet "default"
             --no-restart-on-failure
             --maintenance-policy "MIGRATE"
             --scopes default="https://www.googleapis.com/auth/cloud-platform"
-            --image "/epfl-cdm-tis/tis-boot-disk"
+            --image "common-cpu"
             --boot-disk-size "500"
             --boot-disk-type "pd-ssd"
 
@@ -50,85 +67,88 @@
 
   - SSH into the VM
 
-        gcloud compute ssh vm --project epfl-cdm-tis --zone europe-west1-d
+        gcloud compute ssh vm --project NAME-OF-PROJECT --zone europe-west1-d
         sudo -s
         
         cd ~ , 
         screen
-        git clone https://github.com/KenYounge/tools.git
+    
+        git clone https://github.com/KenYounge/qkit.git
         jupyter lab --allow-root
 
 
-
-
-#### Configure Ubuntu on a new VM
+#### Configure UNIX
 
   - Login with ssh
 
-        gcloud compute ssh tis-vm --project epfl-cdm-tis --zone europe-west1-d
+        gcloud compute ssh vm --project NAME-OF-PROJECT --zone europe-west1-d
         sudo -s
-        cd /
 
-  - Set GCP defaults
+  - Setup GCP 
 
-        gcloud config set project epfl-cdm-tis
+        gcloud config set project NAME-OF-PROJECT
         gcloud config set compute/zone europe-west1-d
 
   - Setup git
 
         apt-get install -y git
         git config --global credential.helper cache
-        git config --global user.name "tislab"
-        git config --global user.email "epfl.tis.lab@gmail.com"
-        echo "machine github.com login epfl.tis.lab@gmail.com password THEPASSWRD" >> ~/.netrc
-        echo "machine github.com login epfl.tis.lab@gmail.com password THEPASSWRD" >> /.netrc
+        git config --global user.name "GITHUB-USERNAME"
+        git config --global user.email "GITHUB-EMAIL-ADDRESS"
+        echo "machine github.com login GITHUB-EMAIL-ADDRESS password THEPASSWRD" >> ~/.netrc
+        echo "machine github.com login GITHUB-EMAIL-ADDRESS password THEPASSWRD" >> /.netrc
 
-  - Clone pytis git repo
+  - Clone qkit  
 
-        git clone https://github.com/epfl-tis/pytis.git
+        cd /
+        git clone https://github.com/KenYounge/qkit.git
 
-  - Install libraries
+  - Setup UNIX
 
-        bash /pytis/vm_config.sh
+        bash /qkit/setup_unix.sh
         export PATH="/anaconda/bin:$PATH"     # may need to run manually
 
-#### Update Ubuntu OS on a VM
+
+#### Update UNIX
 
   - Start VM
 
-        gcloud compute instances start tis-vm --project epfl-cdm-tis --zone europe-west1-d
+        gcloud compute instances start vm --project NAME-OF-PROJECT --zone europe-west1-d
 
   - Log into VM
 
-        gcloud compute ssh tis-vm --project "epfl-cdm-tis" --zone "europe-west1-d"
+        gcloud compute ssh vm --project NAME-OF-PROJECT --zone "europe-west1-d"
         sudo -s
         cd /
 
-  - Install and/or upgrade changes to OS
+  - Install Ubuntu packages
 
-        apt-get install -y  ????      do what you want to update or add to OS
-        pip install --upgrade ????    do what you want to update or add to OS
+        apt-get install -y  _______        # enter the package name
+    
+  - Install or upgrade pip packages
+    
+        pip install --upgrade _______      # enter the package name
 
 #### Save a disk image
 
-  - Delete VM instance, but leave boot disk
+  - Delete the VM instance, but LEAVE the boot disk soit can be re-used...
 
-        gcloud compute instances delete tis-vm --keep-disks boot --project epfl-cdm-tis --zone europe-west1-d
+        gcloud compute instances delete vm --keep-disks boot --project NAME-OF-PROJECT --zone europe-west1-d
 
   - Copy boot disk into image
 
-        gcloud compute images delete tis-boot-disk --project epfl-cdm-tis
-        gcloud compute images create tis-boot-disk --source-disk tis-vm --project epfl-cdm-tis --source-disk-zone europe-west1-d
+        gcloud compute images delete boot-disk --project NAME-OF-PROJECT
+        gcloud compute images create boot-disk --source-disk vm --project NAME-OF-PROJECT --source-disk-zone europe-west1-d
 
-  - Archive a versioned copy of image (increment tis-boot-disk-### ... )
+  - Archive a versioned copy of image (increment boot-disk-### ... )
 
-        gcloud compute images create tis-boot-disk-003 --source-disk tis-vm --project epfl-cdm-tis --source-disk-zone europe-west1-d
+        gcloud compute images create boot-disk-003 --source-disk vm --project NAME-OF-PROJECT --source-disk-zone europe-west1-d
 
   - Delete old boot disk
 
-        gcloud compute disks delete tis-vm --project epfl-cdm-tis --zone europe-west1-d
+        gcloud compute disks delete vm --project NAME-OF-PROJECT --zone europe-west1-d
 
-#### Manually run a python program on a VM
+#### A typical workflow to run a python program on a VM
 
   - Start VM
 
@@ -136,60 +156,64 @@
 
         gcloud compute instances create "vm"
             --boot-disk-device-name "vm"
-            --project "epfl-cdm-tis"
+            --project NAME-OF-PROJECT
             --zone "europe-west1-d"
             --machine-type "n1-highmem-16"
             --subnet "default"
             --no-restart-on-failure
             --maintenance-policy "MIGRATE"
             --scopes default="https://www.googleapis.com/auth/cloud-platform"
-            --image "/epfl-cdm-tis/tis-boot-disk"
+            --image "/NAME-OF-PROJECT/boot-disk"
             --boot-disk-size "20"
             --boot-disk-type "pd-ssd"
 
   - Connect to VM  
   
-        gcloud compute ssh tis-vm --project epfl-cdm-tis --zone europe-west1-d  
+        gcloud compute ssh vm --project NAME-OF-PROJECT --zone europe-west1-d  
         sudo -s  
+    
+  - Start a screen session so you can reconnect later
+    
         screen  
 
-  - Update the `tools` repo
+  - Clone your project
 
-        cd /tools/
-        git pull
+        cd /
+        git clone https://github.com/KenYounge/REPO-PROJECT.git
+        cd /REPO-PROJECT
 
   - Execute your program
 
         export PATH="/anaconda/bin:$PATH"
         python PROGRAM.py
 
-  - Copy output to a Google Cloud Storage bucket
+  - Copy output to a Google Cloud Storage bucket so you can get to it later
 
         gsutil -m cp ~* gs://BUCKETNAME
 
 ### gcloud
 
-  - view serial output:     
+  - View serial output:     
   
         gcloud compute instances get-serial-port-output INSTANCENAME --zone "europe-west1-d"
     
-  - set metadata:          
+  - Set metadata:          
    
         gcloud compute  ....somestuf....  --metadata "codeno=1234567890123456"
     
-  - send files to VM:       
+  - Send file(s) to VM:       
   
         gcloud compute copy-files ~/local-dir/file-1 VMNAME:~/remote-destination
     
-  - copy files from VM:     
+  - copy file(s) from VM:     
   
         gcloud compute copy-files VMNAME:/gce/FILENAME ~/LOCALDIR
 
-  - re-run startup       
+  - re-run the startup script (the one that ran when you booted the VM)     
   
         sudo /usr/share/google/run-startup-scripts
 
-  - attach disks in compute engine
+  - attach another disk to a Google Compute VM 
                                 
         mkdir /mnt/MOUNTNAME
         /usr/share/google/safe_format_and_mount -m "mkfs.ext4 -F" /dev/sdb /mnt/MOUNTNAME
@@ -198,23 +222,23 @@
 
 ### gsutils
 
-  - copy local to cloud   
+  - Copy local to cloud   
     
         gsutil -m cp . gs://bucketname   this runs in parallel and copys everything in cur dir
     
-  - copy cloud to cloud    
+  - Copy cloud to cloud    
    
         gsutil -m cp gs://bucketname/* gs://bucketname
     
-  - move local to cloud     
+  - Move local to cloud     
   
         gsutil -m mv . gs://bucketname   this runs in parallel and copys everything in cur dir
     
-  - remove all in bucket    
+  - Remove all in bucket    
   
         gsutil -m rm -R gs://bucketname/
     
-  - synch s3 and google     
+  - Synch s3 and google     
   
         gsutil rsync -d -r s3://my-s3-bucket gs://my-gcs-bucket
 
@@ -256,7 +280,7 @@
   - `git config --global credential.helper store` to store your git credentials 
 
 
-### Other Misc UNIX Commands
+### Misc UNIX Commands
 
     which python
 	
@@ -296,15 +320,19 @@ Deactive (the currently active) conda environment
 
     conda deactivate   # will probably activate Python 2.7 from Apple Mac OS
     
-### `venv` Virtual Environments
+### Virtual Environments
+
+Python works better when every project has its own `venv` virtual environment.
+To use one, you first have to start it (often just inside the local project directory).
 
     python -m venv myenv
+
+After it is constructed, you then need to tell UNIX that is is active.
 
     source myenv/bin/activate
    
     
 ## Jupyter
-
 
 Install the ipython kernel package so you can manage kernels and environments
     

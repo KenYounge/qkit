@@ -33,5 +33,9 @@ LIECNSE: Access to this code is provided under an MIT License.
 ### Other Resources
 
   * See [RECIPES.md](RECIPES.md) for instructions for common tasks.
+
+  * See [REQUIREMENTS.txt](REQUIREMENTS.txt) for the pip packages used by toolkit. 
+
   * See [setup_osx.md](setup_osx.md) for reinstall instructions for a Mac OSX Big Sur M1 computer.
+
   * See [setup_unix.sh](setup_unix.sh) for an executable bash script to preconfigure a Ubuntu machine for common tasks.
