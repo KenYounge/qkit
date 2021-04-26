@@ -1,8 +1,9 @@
 """ Utilities for Google Cloud"""
 
 import subprocess
+import os
 
-# GSUTIL TO BUCKET STORAGE ---------------------------------------------------------------
+# GSUTIL ---------------------------------------------------------------------------------------------------------------
 
 def gsutil_cp(source_file, dest_file):
     assert source_file, 'No SOURCE file specified'
@@ -14,5 +15,3 @@ def gsutil_ls(bucket_name):
     sims_csv_string = subprocess.check_output(['gsutil', 'ls', 'gs://' + bucket_name])
     sims_csv_list   = str(sims_csv_string).split('\n')
     return filter(None, sims_csv_list)
-
-
