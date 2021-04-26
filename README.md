@@ -1,4 +1,4 @@
-# The `qkit` Toolkit
+# `qkit` - The Quant AI Toolkit
 
 Copyright (c) 2021 by Quant AI, LLC.  
 

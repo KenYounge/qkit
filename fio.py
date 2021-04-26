@@ -3,7 +3,18 @@
 import os
 import csv
 import pickle
-import subprocess
+from   socket     import gethostname
+
+
+# INSPECT ----------------------------------------------------------------------
+
+def list_fnames(dirpath=''):
+    """Walk directory and gather list of filenames"""
+    if not dirpath: dirpath='.'
+    return next(os.walk(dirpath))[2]
+
+def file_exists(fname):
+    return os.path.exists(fname)
 
 
 # LOAD -------------------------------------------------------------------------
@@ -146,6 +157,15 @@ def save_dct(dct, fname):
         for key in keys:
             writer.writerow( (key, dct[key]))
 
+def save_status(s):
+    """ Save one-line into a status file. Overwrite file if it exists. Use that file to monitor a process. """
+
+    fname =  'STATUS-' + gethostname() + '.txt'
+    str(s).replace('\n', '; ')
+    with open(fname, "w+", encoding='utf-8') as f:  # w+ will overwrite file if it exists, start new file if it does not
+        f.write(s)
+
+
 # APPEND -----------------------------------------------------------------------
 
 def append_csv(out, fname):
@@ -162,71 +182,6 @@ def append_str(txt, fname):
     if txt:
         with open(fname, 'a', encoding='utf-8') as f:
                 f.write(txt)
-
-
-# DELETE -----------------------------------------------------------------------
-
-def delete_file(fname):
-    fname = str(fname.strip())
-    if os.path.exists(fname): os.remove(fname)
-
-def delete_files(fpath):
-    if not fpath: fpath='.'
-    if not fpath.endswith('/'): fpath += '/'
-    fnames = list_fnames(fpath)
-    for fname in fnames:
-        delete_file(fpath + fname)
-
-def delete_files_by_prefix(fpath, prefix):
-    if not fpath: fpath='.'
-    if not fpath.endswith('/'): fpath += '/'
-    fnames = list_fnames(fpath)
-    for fname in fnames:
-        if str(fname).startswith(prefix):
-            delete_file(fpath + fname)
-
-
-# GOOGLE STORAGE ---------------------------------------------------------------
-
-def gs_copy_file(source_file, dest_file):
-    assert source_file, 'No SOURCE file specified'
-    assert dest_file,   'No DESTINATION file specified'
-    print(subprocess.check_output(['gsutil', 'cp', source_file, dest_file]))
-
-def gs_list_bucket(bucket_name):
-    assert bucket_name, 'No Bucket Name specified'
-    sims_csv_string = subprocess.check_output(['gsutil', 'ls', 'gs://' + bucket_name])
-    sims_csv_list   = str(sims_csv_string).split('\n')
-    return filter(None, sims_csv_list)
-
-
-# CACHE ------------------------------------------------------------------------
-
-def cache(obj, name, path='', msg=''):
-    with open(path + name + '.pkl', 'wb') as f:
-        pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
-    if not msg: msg = name
-    count = "{:,}".format(len(obj))
-    print(str(count).rjust(12) + '  ' + msg)
-
-def decache(name, path='', msg=''):
-    with open(path + name + '.pkl', 'rb') as f:
-        obj = pickle.load(f)
-    if not msg: msg = name
-    count = "{:,}".format(len(obj))
-    print(str(count).rjust(12) + '  ' + msg.strip())
-    return obj
-
-
-# MISC -------------------------------------------------------------------------
-
-def list_fnames(dirpath=''):
-    """Walk directory and gather list of filenames"""
-    if not dirpath: dirpath='.'
-    return next(os.walk(dirpath))[2]
-
-def file_exists(fname):
-    return os.path.exists(fname)
 
 def combine_csv(dirpath, prefix, has_headers=True, num_to_expect=None, verbose=False):
     data = []
@@ -264,3 +219,42 @@ def combine_csv(dirpath, prefix, has_headers=True, num_to_expect=None, verbose=F
 
     return data
 
+
+# CACHE ------------------------------------------------------------------------
+
+def cache(obj, name, path='', msg=''):
+    with open(path + name + '.pkl', 'wb') as f:
+        pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
+    if not msg: msg = name
+    count = "{:,}".format(len(obj))
+    print(str(count).rjust(12) + '  ' + msg)
+
+def decache(name, path='', msg=''):
+    with open(path + name + '.pkl', 'rb') as f:
+        obj = pickle.load(f)
+    if not msg: msg = name
+    count = "{:,}".format(len(obj))
+    print(str(count).rjust(12) + '  ' + msg.strip())
+    return obj
+
+
+# DELETE -----------------------------------------------------------------------
+
+def delete_file(fname):
+    fname = str(fname.strip())
+    if os.path.exists(fname): os.remove(fname)
+
+def delete_files(fpath):
+    if not fpath: fpath='.'
+    if not fpath.endswith('/'): fpath += '/'
+    fnames = list_fnames(fpath)
+    for fname in fnames:
+        delete_file(fpath + fname)
+
+def delete_files_by_prefix(fpath, prefix):
+    if not fpath: fpath='.'
+    if not fpath.endswith('/'): fpath += '/'
+    fnames = list_fnames(fpath)
+    for fname in fnames:
+        if str(fname).startswith(prefix):
+            delete_file(fpath + fname)

@@ -5,29 +5,29 @@ import sys
 from   socket     import gethostname
 from   datetime   import datetime
 from   os         import uname
+from   subprocess import check_output
 
-import ui
-
-LOGFILE_NAME = ""
-
-def logger_output_fname(add_timestamp=False):
-
-    fname = 'LOGGER'
-
-    if bool(str(uname()[0]) == 'Linux'):
-        fname += '-' + gethostname()
-
-    if add_timestamp:
-        ts = str(str(datetime.now())[:-10]).replace(' ', '-').replace(':', '-')
-        ts = ts[:10] + '_' + ts[11:]
-        fname += '-' + ts
-
-    fname += '.txt'
-
-    return fname
+LOGFILE_NAME = ""   # Global log file name will be set upon import of module and instantiation of the _Logger class.
 
 class _Logger(object):
     """ Private helper class. Do not try to use this directly."""
+
+    @ staticmethod
+    def make_fname(stamp_time=False):
+
+        fname = 'LOGGER'
+
+        if bool(str(uname()[0]) == 'Linux'):
+            fname += '-' + gethostname()
+
+        if stamp_time:
+            ts = str(str(datetime.now())[:-10]).replace(' ', '-').replace(':', '-')
+            ts = ts[:10] + '_' + ts[11:]
+            fname += '-' + ts
+
+        fname += '.txt'
+
+        return fname
 
     def __init__(self):
 
@@ -36,40 +36,66 @@ class _Logger(object):
 
         # Set log filename
         global LOGFILE_NAME
-        LOGFILE_NAME = logger_output_fname()   # might add unique timestamp
+        LOGFILE_NAME = self.make_fname()   # might add unique timestamp
 
         # Write APPEND to Log
         self.logfile = open(LOGFILE_NAME, mode="a")
 
     def write(self, msg):
 
-        # Allow colors (if they were set)
-        self.terminal.write(msg)
+        # Write to terminal
+        self.terminal.write(msg)           # allow coloring in the terminal
 
-        # Strip off colors (if they were set)
-        msg = ui.plaintext(msg)
-        self.logfile.write(msg)
+        # Define colors
+        NORMAL = '\033[0m'
+        BOLD = '\033[1m'
+        FADE = '\033[2m'
+        ITALIC = '\033[3m'
+        UNDERLINE = '\033[4m'
+
+        COLOR_BLACK = '\033[90m'
+        COLOR_RED = '\033[91m'
+        COLOR_GREEN = '\033[92m'
+        COLOR_YELLOW = '\033[93m'
+        COLOR_BLUE = '\033[94m'
+        COLOR_MAGENTA = '\033[95m'
+        COLOR_CYAN = '\033[96m'
+        COLOR_WHITE = '\033[97m'
+
+        HI_WHITE = '\033[1m\033[9%sm\033[4%sm' % (0, 7)
+        HI_BLACK = '\033[1m\033[9%sm\033[4%sm' % (7, 0)
+        HI_RED = '\033[1m\033[9%sm\033[4%sm' % (7, 1)
+        HI_GREEN = '\033[1m\033[9%sm\033[4%sm' % (7, 2)
+        HI_YELLOW = '\033[1m\033[9%sm\033[4%sm' % (7, 3)
+        HI_BLUE = '\033[1m\033[9%sm\033[4%sm' % (7, 4)
+        HI_MAGENTA = '\033[1m\033[9%sm\033[4%sm' % (7, 5)
+        HI_CYAN = '\033[1m\033[9%sm\033[4%sm' % (7, 6)
+
+        # Strip off Colors  (no coloring in the logfile)
+        for FRMT in [NORMAL, BOLD, FADE, ITALIC, UNDERLINE, COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_YELLOW,
+                     COLOR_BLUE, COLOR_MAGENTA, COLOR_CYAN, COLOR_WHITE, HI_WHITE, HI_BLACK, HI_RED, HI_GREEN,
+                     HI_YELLOW, HI_BLUE, HI_MAGENTA, HI_CYAN, '[40m', '[41m', '[42m', '[43m', '[44m', '[45m', '[46m', '[47m']:
+            try:
+                plaintxt = str(msg).replace(FRMT, '')
+            except:
+                plaintxt = msg
+
+        # Write to Log File
+        self.logfile.write(plaintxt)
         self.logfile.flush()
 
     def flush(self):
         pass
 
-def update_status(s):
-    """ Update status by writing out (overwriting) a status line """
 
-    fname =  'STATUS-' + gethostname() + '.txt'
-    str(s).replace('\n', '; ')
-    with open(fname, "w+", encoding='utf-8') as f:  # note that w+ will overwrite the file if it exists, start new file if it does not.
-        f.write(s)
+# AUTO-START LOGGER ON IMPORT ------------------------------------------------------------------------------------------
 
-
-# AUTOMATICALLY START THE LOGGER RUNNING UPON IMPORT -------------------------------------------------------------------
-
+try: width =  int(check_output(['stty', 'size']).split()[1])
+except: width =  80
 sys.stdout = _Logger()
-commanline = ' '.join(sys.argv).split('/')[-1]
-caption = str(gethostname()).upper() + ': ' + commanline
-caption +=  str(str(datetime.now())[:-10]).rjust(ui.WIDTH_CONSOLE-len(caption))
-ui.divider('=')
+command_line_args = ' '.join(sys.argv).split('/')[-1]
+caption = str(gethostname()).upper() + ': ' + command_line_args
+caption +=  str(str(datetime.now())[:-10]).rjust(width-len(caption))
+print('=' * width)
 print(caption)
-ui.divider('=')
-
+print('=' * width)

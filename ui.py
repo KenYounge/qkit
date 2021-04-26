@@ -8,13 +8,21 @@ from subprocess   import check_output
 from   datetime   import datetime
 
 
-# GLOBALS & CONSTANTS --------------------------------------------------------------------------------------------------
-INDENT                 = "        "
+# TERMINAL MANAGEMENT --------------------------------------------------------------------------------------------------
 
-try:
-    WIDTH_CONSOLE      = int(check_output(['stty', 'size']).split()[1])
-except:
-    WIDTH_CONSOLE      = 80
+def term_clear():
+    os.system('clear')
+
+def term_width():
+    try:
+        return int(check_output(['stty', 'size']).split()[1])
+    except:
+        return 80
+
+# CONSTANTS ------------------------------------------------------------------------------------------------------------
+
+INDENT                 = "        "
+WIDTH_CONSOLE          = term_width()
 WIDTH_PROGBAR          = WIDTH_CONSOLE/2
 WIDTH_LOGFILE          = 120
 WIDTH_MENU             = WIDTH_CONSOLE/2
@@ -43,9 +51,11 @@ HI_BLUE                = '\033[1m\033[9%sm\033[4%sm' % (7, 4)
 HI_MAGENTA             = '\033[1m\033[9%sm\033[4%sm' % (7, 5)
 HI_CYAN                = '\033[1m\033[9%sm\033[4%sm' % (7, 6)
 
-# Remove coloring when we are in the cloud - makes log files hard to read
+# CLOUD FORMATS --------------------------------------------------------------------------------------------------------
+
 if bool(str(os.uname()[0]) == 'Linux'):
 
+    # Remove coloring when we are in the cloud - makes log files hard to read
     NORMAL             = ''
     BOLD               = ''
     FADE               = ''
@@ -95,16 +105,13 @@ def colorize(txt, colors):
 
 def plaintext(s):
 
-
     for FRMT in [ NORMAL, BOLD, FADE, ITALIC, UNDERLINE, COLOR_BLACK, COLOR_RED, COLOR_GREEN,
                   COLOR_YELLOW, COLOR_BLUE, COLOR_MAGENTA, COLOR_CYAN, COLOR_WHITE, HI_WHITE, HI_BLACK, HI_RED, HI_GREEN,
-                  HI_YELLOW, HI_BLUE, HI_MAGENTA, HI_CYAN,
-                  '[40m','[41m','[42m','[43m','[44m','[45m','[46m','[47m' ]:
+                  HI_YELLOW, HI_BLUE, HI_MAGENTA, HI_CYAN, '[40m','[41m','[42m','[43m','[44m','[45m','[46m','[47m' ]:
         try:
-            s = str(s).replace(FRMT, '')
-        except: pass
-    return s
-
+            return str(s).replace(FRMT, '')
+        except:
+            return s
 
 def underline(s):
     return UNDERLINE + s + NORMAL
@@ -348,18 +355,18 @@ def progbar(x, msg='', width=50):
         print(e)
 
 
-# CONSOLE MESSAGING ----------------------------------------------------------------------------------------------------
+# MESSAGING ------------------------------------------------------------------------------------------------------------
 
 def banner(txt=' ', colors=(color_white, hi_blue), width=None, stamp_time=True):
     """Print message as a banner"""
-    if not width: width = console_width()
+    if not width: width = term_width()
     if stamp_time: txt +=  str(str(datetime.now())[:-10]).rjust(width - len(txt))
     if not colors or bool(str(os.uname()[0]) == 'Linux'):
         divider(width=width)
         print(txt)
         divider(width=width)
     else:
-        print(colorize(txt.ljust(console_width()), colors))
+        print(colorize(txt.ljust(term_width()), colors))
 
 def section(txt, capitalize=True):
     """Print message as a sub-HEADER"""
@@ -369,7 +376,7 @@ def section(txt, capitalize=True):
     print()
 
 def divider(char='-', width=None):
-    if not width: width = console_width()
+    if not width: width = term_width()
     print(char * width)
 
 def message(msg, prefix='', warning=False, err=False, ljust=False, fcolor=COLOR_BLUE, bcolor='', lf=True, tracebk=False):
@@ -476,12 +483,3 @@ def debug(msg, verbose=False):
     # Only print out debugging lineitems when program was called
     if verbose or 'debug' in [str(flag).lower() for flag in sys.argv]:
         msg(msg, prefix='>>>>>>> ')
-
-def clear():
-    os.system('clear')
-
-def console_width():
-    try:
-        return int(check_output(['stty', 'size']).split()[1])
-    except:
-        return 80
