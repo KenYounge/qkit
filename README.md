@@ -1,42 +1,58 @@
-# `qkit` - The Quant AI Toolkit
+# `qkit` - Quant AI Toolkit
 
-Copyright (c) 2021 by Quant AI, LLC.  
+Copyright (c) 2021 by Kenneth A. Younge.  
 
-This repository provides supporting Python code and utilities used in our research.  
+This repository provides python code and utilities used in our research.  
 
-AUTHOR:  Kenneth A. Younge
-SOURCE:  https://github.com/KenYounge/qkit/
-LIECNSE: Access to this code is provided under an MIT License.
+	AUTHOR:  Kenneth A. Younge  
+	SOURCE:  https://github.com/KenYounge/qkit/  
+	LICENSE: Access to this code is provided under an MIT License.  
 
 
-### Installation
+## Install
 
-  - Install with pip:
-  
+### Install with `pip`
+
         pip install qkit
 
-  - Or clone the repository into your own project from GitHub:
+### Or include into your project
+
+  - Clone from GitHub
 
         git clone https://github.com/KenYounge/qkit.git
-        pip install -r qkit/REQUIREMENTS.txt
+        cd qkit    
+    
+  - Create and activate a virtual environment
+            
+        python3 -m venev venev
+        . venv/bin/activate
 
-### Usage
+  - Install supporting packages  
+            
+        pip install -r requirements.txt
 
-  - Import the entire package:
+## Usage
+
+  - Import `qkit`
 
         import qkit
 
-  - Or import the individual modules you want to use:
+  - Or import individual modules that you want to use
     
         from qkit import fio
+        from qkit.passcode import passcode
 
 
-### Resources
+## `/docs/`
 
-  * [Recipes.md](RECIPES.md) for instructions for common tasks.
+The `/docs/` directory contains aditional documentation for: 
 
-  * [Rrequirements.txt](REQUIREMENTS.txt) for the pip packages used by toolkit. 
+  * [recipes.md](recipes.md) Instructions for tasks that are easy to forget.
 
-  * [setup_osx.md](setup_osx.md) for instructions to configure a new Macbook OSX Big Sur M1.
+  * [requirements_extra.txt](requirements_extra.txt) List of all pip packages used across Quant AI. 
 
-  * [setup_unix.sh](setup_unix.sh) for a bash script to configure LINUX for common tasks.
+  * [setup_osx.md](setup_osx.md) Instructions to setup and configure a new Macbook M1 (for fast recovery).
+
+  * [setup_unix.sh](setup_unix.sh) Bash script to setup and configure a Ubuntu LINUX server.
+
+

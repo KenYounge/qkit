@@ -4,84 +4,97 @@ import os
 import sys
 import json
 import traceback
-from subprocess   import check_output
-from   datetime   import datetime
+from   subprocess      import check_output
+from   datetime        import datetime
+from   rich            import print
+from   rich.console    import Console
+from   rich.theme      import Theme
+from   rich.markdown   import Markdown
+from   rich.table      import Table
+from   rich.text       import Text
+from   rich.progress   import track
+from   rich.traceback  import install as override_traceback
+
+override_traceback()
 
 
-# TERMINAL MANAGEMENT --------------------------------------------------------------------------------------------------
+# FORMAT CONSTANTS -----------------------------------------------------------------------------------------------------
 
-def term_clear():
+class Formats:
+
+    NORMAL           = '\033[0m'
+    BOLD             = '\033[1m'
+    FADE             = '\033[2m'
+    ITALIC           = '\033[3m'
+    UNDERLINE        = '\033[4m'
+
+    BLACK            = '\033[90m'
+    RED              = '\033[91m'
+    GREEN            = '\033[92m'
+    YELLOW           = '\033[93m'
+    BLUE             = '\033[94m'
+    MAGENTA          = '\033[95m'
+    CYAN             = '\033[96m'
+    WHITE            = '\033[97m'
+
+    WHITE_H          = '\033[1m\033[9%sm\033[4%sm' % (0, 7)
+    BLACK_H          = '\033[1m\033[9%sm\033[4%sm' % (7, 0)
+    HI_RED           = '\033[1m\033[9%sm\033[4%sm' % (7, 1)
+    GREEN_H          = '\033[1m\033[9%sm\033[4%sm' % (7, 2)
+    YELLOW_H         = '\033[1m\033[9%sm\033[4%sm' % (7, 3)
+    BLUE_H           = '\033[1m\033[9%sm\033[4%sm' % (7, 4)
+    MAGENTA_H        = '\033[1m\033[9%sm\033[4%sm' % (7, 5)
+    CYAN_H           = '\033[1m\033[9%sm\033[4%sm' % (7, 6)
+
+
+# GLOBALS  -------------------------------------------------------------------------------------------------------------
+
+F = Formats()
+W = 80
+I = " " * 8
+
+
+# FORMAT FUNCTIONS -----------------------------------------------------------------------------------------------------
+
+def clear_screen():
     os.system('clear')
 
-def term_width():
+def get_width():
+    """ Refresh global width variable """
+    global W
     try:
-        return int(check_output(['stty', 'size']).split()[1])
+        W = int(check_output(['stty', 'size']).split()[1])
     except:
-        return 80
+        W = 80
+    return W
 
-# CONSTANTS ------------------------------------------------------------------------------------------------------------
+def stop_coloring():
 
-INDENT                 = "        "
-WIDTH_CONSOLE          = term_width()
-WIDTH_PROGBAR          = WIDTH_CONSOLE/2
-WIDTH_LOGFILE          = 120
-WIDTH_MENU             = WIDTH_CONSOLE/2
+    global F
 
-NORMAL                 = '\033[0m'
-BOLD                   = '\033[1m'
-FADE                   = '\033[2m'
-ITALIC                 = '\033[3m'
-UNDERLINE              = '\033[4m'
+    F.NORMAL = ''
+    F.BOLD = ''
+    F.FADE = ''
+    F.ITALIC = ''
+    F.UNDERLINE = ''
+    F.BLACK = ''
+    F.RED = ''
+    F.GREEN = ''
+    F.YELLOW = ''
+    F.BLUE = ''
+    F.MAGENTA = ''
+    F.CYAN = ''
+    F.WHITE = ''
+    F.WHITE_H = ''
+    F.BLACK_H = ''
+    F.HI_RED = ''
+    F.GREEN_H = ''
+    F.YELLOW_H = ''
+    F.BLUE_H = ''
+    F.MAGENTA_H = ''
+    F.CYAN_H = ''
 
-COLOR_BLACK            = '\033[90m'
-COLOR_RED              = '\033[91m'
-COLOR_GREEN            = '\033[92m'
-COLOR_YELLOW           = '\033[93m'
-COLOR_BLUE             = '\033[94m'
-COLOR_MAGENTA          = '\033[95m'
-COLOR_CYAN             = '\033[96m'
-COLOR_WHITE            = '\033[97m'
-
-HI_WHITE               = '\033[1m\033[9%sm\033[4%sm' % (0, 7)
-HI_BLACK               = '\033[1m\033[9%sm\033[4%sm' % (7, 0)
-HI_RED                 = '\033[1m\033[9%sm\033[4%sm' % (7, 1)
-HI_GREEN               = '\033[1m\033[9%sm\033[4%sm' % (7, 2)
-HI_YELLOW              = '\033[1m\033[9%sm\033[4%sm' % (7, 3)
-HI_BLUE                = '\033[1m\033[9%sm\033[4%sm' % (7, 4)
-HI_MAGENTA             = '\033[1m\033[9%sm\033[4%sm' % (7, 5)
-HI_CYAN                = '\033[1m\033[9%sm\033[4%sm' % (7, 6)
-
-# CLOUD FORMATS --------------------------------------------------------------------------------------------------------
-
-if bool(str(os.uname()[0]) == 'Linux'):
-
-    # Remove coloring when we are in the cloud - makes log files hard to read
-    NORMAL             = ''
-    BOLD               = ''
-    FADE               = ''
-    ITALIC             = ''
-    UNDERLINE          = ''
-    COLOR_BLACK        = ''
-    COLOR_RED          = ''
-    COLOR_GREEN        = ''
-    COLOR_YELLOW       = ''
-    COLOR_BLUE         = ''
-    COLOR_MAGENTA      = ''
-    COLOR_CYAN         = ''
-    COLOR_WHITE        = ''
-    HI_WHITE           = ''
-    HI_BLACK           = ''
-    HI_RED             = ''
-    HI_GREEN           = ''
-    HI_YELLOW          = ''
-    HI_BLUE            = ''
-    HI_MAGENTA         = ''
-    HI_CYAN            = ''
-
-
-# FORMATTING -----------------------------------------------------------------------------------------------------------
-
-def colorize(txt, colors):
+def style(txt, colors):
     """ Apply color to text.
         :param    txt:       text string to be formatted
         :param    colors:    a function, or list of functions, that add color
@@ -94,81 +107,81 @@ def colorize(txt, colors):
         if type(colors) is tuple or type(colors) is list:
             for color in colors:
                 if color:
-                    s = colorize(s, color)
-                s = str(s).replace(NORMAL + NORMAL, NORMAL)
+                    s = style(s, color)
+                s = str(s).replace(F.NORMAL + F.NORMAL, F.NORMAL)
         elif type(colors) is str:
-            s = colors + s + NORMAL
+            s = colors + s + F.NORMAL
         else:
             s = colors(s)
-    s = str(s).replace(NORMAL + NORMAL, NORMAL)
+    s = str(s).replace(F.NORMAL + F.NORMAL, F.NORMAL)
     return s
 
-def plaintext(s):
+def strip_formatting(s):
 
-    for FRMT in [ NORMAL, BOLD, FADE, ITALIC, UNDERLINE, COLOR_BLACK, COLOR_RED, COLOR_GREEN,
-                  COLOR_YELLOW, COLOR_BLUE, COLOR_MAGENTA, COLOR_CYAN, COLOR_WHITE, HI_WHITE, HI_BLACK, HI_RED, HI_GREEN,
-                  HI_YELLOW, HI_BLUE, HI_MAGENTA, HI_CYAN, '[40m','[41m','[42m','[43m','[44m','[45m','[46m','[47m' ]:
+    for FRMT in [ F.NORMAL, F.BOLD, F.FADE, F.ITALIC, F.UNDERLINE, F.BLACK, F.RED, F.GREEN,
+                  F.YELLOW, F.BLUE, F.MAGENTA, F.CYAN, F.WHITE, F.WHITE_H, F.BLACK_H, F.HI_RED, F.GREEN_H,
+                  F.YELLOW_H, F.BLUE_H, F.MAGENTA_H, F.CYAN_H, '[40m','[41m','[42m','[43m','[44m','[45m','[46m','[47m' ]:
         try:
             return str(s).replace(FRMT, '')
         except:
             return s
 
 def underline(s):
-    return UNDERLINE + s + NORMAL
+    return F.UNDERLINE + s + F.NORMAL
 
 def italic(s):
-    return ITALIC + s + NORMAL
+    return F.ITALIC + s + F.NORMAL
 
 def fade(s):
-    return FADE + s + NORMAL
+    return F.FADE + s + F.NORMAL
 
-def color_black(s):
-    return COLOR_BLACK + s + NORMAL
+def black(s):
+    return F.BLACK + s + F.NORMAL
 
-def color_red(s):
-    return COLOR_RED + s + NORMAL
+def black_h(s):
+    return F.BLACK_H + s + F.NORMAL
 
-def color_green(s):
-    return COLOR_GREEN + s + NORMAL
+def white(s):
+    return F.WHITE + s + F.NORMAL
 
-def color_yellow(s):
-    return COLOR_YELLOW + s + NORMAL
+def white_h(s):
+    return F.WHITE_H + s + F.NORMAL
 
-def color_blue(s):
-    return COLOR_BLUE + s + NORMAL
+def red(s):
+    return F.RED + s + F.NORMAL
 
-def color_magenta(s):
-    return COLOR_MAGENTA + s + NORMAL
+def red_h(s):
+    return F.HI_RED + s + F.NORMAL
 
-def color_cyan(s):
-    return COLOR_CYAN + s + NORMAL
+def green(s):
+    return F.GREEN + s + F.NORMAL
 
-def color_white(s):
-    return COLOR_WHITE + s + NORMAL
+def green_h(s):
+    return F.GREEN_H + s + F.NORMAL
 
-def hi_black(s):
-    return HI_BLACK + s + NORMAL
+def blue(s):
+    return F.BLUE + s + F.NORMAL
 
-def hi_red(s):
-    return HI_RED + s + NORMAL
+def blue_h(s):
+    return F.BLUE_H + s + F.NORMAL
 
-def hi_green(s):
-    return HI_GREEN + s + NORMAL
+def yellow(s):
+    return F.YELLOW + s + F.NORMAL
 
-def hi_yellow(s):
-    return HI_YELLOW + s + NORMAL
+def yellow_h(s):
+    return F.YELLOW_H + s + F.NORMAL
 
-def hi_blue(s):
-    return HI_BLUE + s + NORMAL
+def magenta(s):
+    return F.MAGENTA + s + F.NORMAL
 
-def hi_magenta(s):
-    return HI_MAGENTA + s + NORMAL
+def magenta_h(s):
+    return F.MAGENTA_H + s + F.NORMAL
 
-def hi_cyan(s):
-    return HI_CYAN + s + NORMAL
+def cyan(s):
+    return F.CYAN + s + F.NORMAL
 
-def hi_white(s):
-    return HI_WHITE + s + NORMAL
+def cyan_h(s):
+    return F.CYAN_H + s + F.NORMAL
 
 
 # MENUS ----------------------------------------------------------------------------------------------------------------
@@ -193,7 +206,7 @@ def menu(options, title=None, default=None, shortcuts=False, simplelist=True):
             title = str(title).strip()
             title = title + ': ' if not title.endswith(':') else title + ' '
         title = title[:-2] + ' [' + str(default) + ']: ' if default else title
-        title = UNDERLINE + title + NORMAL
+        title = F.UNDERLINE + title + F.NORMAL
 
         # Convert simple list to a list of tuples if the simplelist flag is set.
         options = [ (optno + 1, options[optno])
@@ -206,7 +219,7 @@ def menu(options, title=None, default=None, shortcuts=False, simplelist=True):
         colwidth += 2
 
         # Make sure we start with a clean console line
-        sys.stdout.write('\r'.ljust(WIDTH_CONSOLE))
+        sys.stdout.write('\r'.ljust(W))
         sys.stdout.write('\r')
         sys.stdout.flush()
 
@@ -226,7 +239,7 @@ def menu(options, title=None, default=None, shortcuts=False, simplelist=True):
 
         # get choice
         try:
-            choice = input(' Select:  ' + NORMAL)
+            choice = input(' Select:  ' + F.NORMAL)
         except (KeyboardInterrupt, SystemExit):
             print()
             raise
@@ -242,7 +255,7 @@ def menu(options, title=None, default=None, shortcuts=False, simplelist=True):
         if choice == '' and default:
             sys.stdout.write('\033[1A')  # go up a line
             sys.stdout.flush()
-            print(NORMAL + '\r Select:  ' + str(default) + NORMAL)
+            print(F.NORMAL + '\r Select:  ' + str(default) + F.NORMAL)
             print()
             return default
 
@@ -357,16 +370,15 @@ def progbar(x, msg='', width=50):
 
 # MESSAGING ------------------------------------------------------------------------------------------------------------
 
-def banner(txt=' ', colors=(color_white, hi_blue), width=None, stamp_time=True):
+def banner(txt=' ', colors=(white, blue_h), width=W, stamp_time=True):
     """Print message as a banner"""
-    if not width: width = term_width()
     if stamp_time: txt +=  str(str(datetime.now())[:-10]).rjust(width - len(txt))
     if not colors or bool(str(os.uname()[0]) == 'Linux'):
         divider(width=width)
         print(txt)
         divider(width=width)
     else:
-        print(colorize(txt.ljust(term_width()), colors))
+        print(style(txt.ljust(W), colors))
 
 def section(txt, capitalize=True):
     """Print message as a sub-HEADER"""
@@ -375,11 +387,10 @@ def section(txt, capitalize=True):
     print(' >', txt)
     print()
 
-def divider(char='-', width=None):
-    if not width: width = term_width()
+def divider(char='-', width=W):
     print(char * width)
 
-def message(msg, prefix='', warning=False, err=False, ljust=False, fcolor=COLOR_BLUE, bcolor='', lf=True, tracebk=False):
+def message(msg, prefix='', warning=False, err=False, ljust=False, fcolor=F.BLUE, bcolor='', lf=True, tracebk=False):
 
     # Handle Tracebacks
     if tracebk is True:
@@ -417,7 +428,7 @@ def message(msg, prefix='', warning=False, err=False, ljust=False, fcolor=COLOR_
         # Errors
         if err:
             print()
-            print(HI_RED + str('ERROR: ' + msg).ljust(WIDTH_CONSOLE) + NORMAL)
+            print(F.HI_RED + str('ERROR: ' + msg).ljust(W) + F.NORMAL)
             if tracebk:
                 lines = str(tracebk).strip().split('\n')
                 out   = []
@@ -434,24 +445,24 @@ def message(msg, prefix='', warning=False, err=False, ljust=False, fcolor=COLOR_
                                 else:   out.append(line)
                         if out:
                             for line in out:
-                                print(COLOR_RED + line + NORMAL)
+                                print(F.RED + line + F.NORMAL)
                     except Exception as e: print('TRACEBACK ERROR:', str(e))
             print()
 
        # Non-Errors
         else:
 
-            if bcolor: msg = str(bcolor) + msg.ljust(WIDTH_CONSOLE)
-            if warning:   msg = COLOR_RED + BOLD + msg
+            if bcolor: msg = str(bcolor) + msg.ljust(W)
+            if warning:   msg = F.RED + F.BOLD + msg
 
-            msg = '    ' + COLOR_WHITE + msg
+            msg = '    ' + F.WHITE + msg
 
-            if ljust:  msg = str(msg).ljust(WIDTH_CONSOLE - 24)
+            if ljust:  msg = str(msg).ljust(W - 24)
 
             if lf:
-                print(fcolor + msg + NORMAL)
+                print(fcolor + msg + F.NORMAL)
             else:
-                print(fcolor + msg + NORMAL, end='', flush=True)
+                print(fcolor + msg + F.NORMAL, end='', flush=True)
 
     except Exception as e:
         try:
@@ -483,3 +494,6 @@ def debug(msg, verbose=False):
     # Only print out debugging lineitems when program was called
     if verbose or 'debug' in [str(flag).lower() for flag in sys.argv]:
         msg(msg, prefix='>>>>>>> ')
+
+def trace(err):
+

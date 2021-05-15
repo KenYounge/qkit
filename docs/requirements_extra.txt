@@ -14,6 +14,7 @@ fbprophet
 folium
 gensim
 gluonts
+google-cloud-datastore
 google-cloud-storage
 gql
 graphene
@@ -36,16 +37,14 @@ pandas_profiling
 pandasgui
 pandasql
 pdpbox
-pillow	
+pillow
 plotly
 plotly_express
 pmdarima
 pretty-errors
 psutil
-psutil
 pycountry
 pydataset
-pydot
 pydot
 pyenchant
 pygame
@@ -54,9 +53,11 @@ pymysql
 pystan
 python-levenshtein
 rapidfuzz
+rich
 scikit-image
 scikit-learn
-scikit-optimize 
+scikit-optimize
+scikit-optimize
 scipy
 scrapy
 seaborn
@@ -64,6 +65,7 @@ setuptools
 shap
 simhash
 spacy
+sqlalchemy
 statsmodels
 streamlit
 tabulate
@@ -76,7 +78,7 @@ tmap
 tqdm
 tweepy
 u8darts
-vega_datasets 
+vega_datasets
 virtualenv
 word2vec
 wordcloud

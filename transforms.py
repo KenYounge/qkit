@@ -83,7 +83,7 @@ def sigmoid_across_unit_interval(p, k=1.2):
 
             For all continuous values for k >= 1.0
 
-                1.0  step function with a sharp setup from 0 to 1 in the middle at p = 0.5
+                1.0  step function with a sharp docs from 0 to 1 in the middle at p = 0.5
                 1.1  very steep transition in the middle at p = 0.5
                 1.2  transition looks much like a default logistic transition
                 1.3  transition flattens, becoming more linear as k increases
@@ -182,3 +182,35 @@ def percentile_lists_by_idx(lists, pctile, max_len):
             assert cut < len(curlist)
             pctiles.append(curlist[cut])
     return pctiles
+
+def decay(rho, beta, progress):
+    """
+    Decay function from Rosokha & Younge (2019).
+    :param rho: trajectory shape, in [0,1]
+    :param beta: value to decay
+    :param progress: relative progress in interval [0,T]
+    :return: decayed value
+    """
+
+    assert rho >= 0 and rho <= 1, 'Rho must be in [0,1]'
+    assert progress >= 0 and progress <= 1, 't/T must be in [0,1]'
+
+    # No decay
+    if rho == 0:
+        return beta
+
+    # Slow onset decay
+    elif rho > 0 and rho < 0.5:
+        return beta * (1 - (progress) ** (1 / (2 * rho)))
+
+    # Linear decay
+    elif rho == 0.5:
+        return beta * (1 - progress)
+
+    # Fast onset decay
+    elif rho > 0.5 and rho < 1:
+        return beta * (1 - progress) ** (1 / (2 * (1 - rho)))
+
+    # Immediate decay
+    elif rho == 1:
+        return 0

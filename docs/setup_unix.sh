@@ -68,8 +68,8 @@
 #---------------------------------------------------------
 
     pip install --upgrade pip
-    pip install --upgrade google-api-python-client
     pip install --upgrade google-cloud
+    pip install --upgrade google-api-python-client
     pip install --upgrade gcsfs
     pip install --upgrade googledatastore
     pip install --upgrade mysql-connector-python

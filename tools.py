@@ -28,6 +28,15 @@ def is_number(s):
     except: return False
     else:   return True
 
+def flags(value):
+    """Return a list of the set binary flags. For example:  [2, 16, 64]  """
+    flags = []
+    while value:
+        _current_bit = value & (~value+1)
+        flags.append(_current_bit)
+        value ^= _current_bit
+    return flags
+
 def host_name():
     return gethostname()
 
