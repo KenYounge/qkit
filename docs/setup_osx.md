@@ -91,6 +91,7 @@ Install Unix utilities for OS X:
 	brew install ffmpeg
 	brew install tesseract            # OCR engine
 	brew install youtube-dl           # Youtube downloader utility
+    brew install imagemagick          # imagekick utility: https://www.imagemagick.org/
 
 Keep `brew` and `cask` up-to-date
 
@@ -127,7 +128,7 @@ Install zsh-syntax-highlighting
     nano ~/.zshrc
     plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
 
-nstall Powerlevel10k:
+Install Powerlevel10k:
 
 	git clone https://github.com/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
 

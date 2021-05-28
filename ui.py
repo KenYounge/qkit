@@ -6,17 +6,6 @@ import json
 import traceback
 from   subprocess      import check_output
 from   datetime        import datetime
-from   rich            import print
-from   rich.console    import Console
-from   rich.theme      import Theme
-from   rich.markdown   import Markdown
-from   rich.table      import Table
-from   rich.text       import Text
-from   rich.progress   import track
-from   rich.traceback  import install as override_traceback
-
-override_traceback()
-
 
 # FORMAT CONSTANTS -----------------------------------------------------------------------------------------------------
 
@@ -494,6 +483,4 @@ def debug(msg, verbose=False):
     # Only print out debugging lineitems when program was called
     if verbose or 'debug' in [str(flag).lower() for flag in sys.argv]:
         msg(msg, prefix='>>>>>>> ')
-
-def trace(err):
 
